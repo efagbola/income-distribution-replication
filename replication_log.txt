@@ -1,0 +1,131 @@
+Replication Log
+===============
+
+Project: Partial replication of Lofaro & Di Bucchianico (2025)
+Paper: "Impact of monetary policy on functional income distribution: A panel vector autoregressive analysis"
+
+1. Data collection
+------------------
+Downloaded the replication package from Mendeley Data.
+The package contains the Excel dataset:
+Dataset_MP_Impact_functional_Distribution.xlsx
+
+The package does not contain directly executable Python, Stata, R, or EViews code.
+The original paper used EViews 12, so this project reconstructs a partial replication in Python.
+
+2. Data loading
+---------------
+Loaded the Excel dataset into Python using pandas.
+
+Dataset dimensions:
+- 750 rows
+- 15 columns
+
+Variables:
+year, country, i, P, W, WR, GDP, LS, PCOM, UN, SHORTUN, LONGUN, LF, REER, SH
+
+3. Panel structure check
+------------------------
+Checked that the data are structured as a country-year panel.
+
+Panel unit: country
+Time variable: year
+
+Results:
+- 15 countries
+- Years: 1970-2019
+- Duplicate country-year observations: 0
+
+Countries:
+Australia, Belgium, Canada, Finland, France, Germany, Italy, Japan,
+Netherlands, Norway, Portugal, Spain, Sweden, UK, USA
+
+4. Summary statistics
+---------------------
+Created summary statistics for the main variables:
+i, P, W, WR, GDP, LS, PCOM, UN, SHORTUN, LONGUN, LF, REER, SH
+
+Saved outputs:
+- outputs/summary_statistics.csv
+- outputs/summary_statistics.xlsx
+
+5. Descriptive plots
+--------------------
+Calculated cross-country yearly averages and created plots for:
+
+- average interest rate over time
+- average real wage over time
+- average labor share over time
+- average GDP over time
+- average unemployment over time
+- average REER over time
+
+Saved outputs:
+- outputs/average_by_year.csv
+- outputs/average_i_over_time.png
+- outputs/average_WR_over_time.png
+- outputs/average_LS_over_time.png
+- outputs/average_GDP_over_time.png
+- outputs/average_UN_over_time.png
+- outputs/average_REER_over_time.png
+
+6. Data transformations
+-----------------------
+Created log variables:
+- ln_WR
+- ln_GDP
+- ln_PCOM
+- ln_REER
+- ln_LF
+
+Created one-period lagged variables by country:
+- L1_i
+- L1_ln_GDP
+- L1_UN
+- L1_PCOM
+- L1_REER
+
+Saved cleaned dataset:
+- outputs/cleaned_dataset_with_logs_and_lags.csv
+
+7. Fixed-effects regressions
+----------------------------
+Estimated preliminary two-way fixed-effects regressions using Python.
+
+Current models:
+LS ~ i + ln_GDP + UN + PCOM + REER + country fixed effects + year fixed effects
+ln_WR ~ i + ln_GDP + UN + PCOM + REER + country fixed effects + year fixed effects
+
+Lagged models:
+LS ~ L1_i + L1_ln_GDP + L1_UN + L1_PCOM + L1_REER + country fixed effects + year fixed effects
+ln_WR ~ L1_i + L1_ln_GDP + L1_UN + L1_PCOM + L1_REER + country fixed effects + year fixed effects
+
+Standard errors were clustered by country.
+
+Saved outputs:
+- outputs/LS_current_regression_output.txt
+- outputs/ln_WR_current_regression_output.txt
+- outputs/LS_lagged_regression_output.txt
+- outputs/ln_WR_lagged_regression_output.txt
+- outputs/LS_current_coefficients.csv
+- outputs/ln_WR_current_coefficients.csv
+- outputs/LS_lagged_coefficients.csv
+- outputs/ln_WR_lagged_coefficients.csv
+
+8. Clean regression table
+-------------------------
+Created a clean fixed-effects results table containing only the main coefficients.
+
+Saved outputs:
+- outputs/clean_fixed_effects_table.csv
+- outputs/clean_fixed_effects_table.xlsx
+
+9. Notes and limitations
+------------------------
+This project is a partial replication, not a full replication of the original paper.
+The original paper uses a Panel VAR model with impulse response functions.
+This project currently reproduces the data preparation, descriptive statistics,
+descriptive plots, and preliminary two-way fixed-effects regressions.
+
+The fixed-effects regressions should be interpreted as preliminary associations,
+not as causal monetary policy shocks.
