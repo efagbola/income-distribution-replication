@@ -43,7 +43,7 @@ Main variables:
 ## Repository Structure
 
 ```text
-Econometrics_Project/
+income-distribution-replication/
 │
 ├── README.md
 ├── requirements.txt
