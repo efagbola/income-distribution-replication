@@ -69,6 +69,11 @@ df = df.sort_values(["country", "year"]).reset_index(drop=True)
 countries = sorted(df["country"].dropna().unique())
 years = sorted(df["year"].dropna().unique())
 
+df.to_excel(
+    DATA_DIR / "Dataset_MP_Impact_functional_Distribution_clean.xlsx",
+    index=False
+)
+
 # Keep only variables that exist in the file.
 ALL_VARIABLES = [var for var in ALL_VARIABLES if var in df.columns]
 
