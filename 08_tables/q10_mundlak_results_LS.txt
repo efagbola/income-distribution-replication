@@ -4,7 +4,7 @@ Dep. Variable:                     LS   R-squared:                        0.7739
 Estimator:              RandomEffects   R-squared (Between):              0.9943
 No. Observations:                 731   R-squared (Within):               0.3867
 Date:                Sat, Jun 06 2026   R-squared (Overall):              0.9912
-Time:                        20:07:20   Log-likelihood                   -1909.4
+Time:                        21:11:16   Log-likelihood                   -1909.4
 Cov. Estimator:            Unadjusted                                           
                                         F-statistic:                      309.27
 Entities:                          15   P-value                           0.0000

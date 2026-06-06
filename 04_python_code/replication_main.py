@@ -3303,3 +3303,76 @@ for dep_var in dependent_variables:
         f.write(str(mundlak_results.summary))
 
 print("\n\nAll estimations completed successfully.")
+
+
+# ============================================================
+# QUESTION 12. OWN ESTIMATIONS NOT DONE IN THE PAPER
+# Split sample before and after the Global Financial Crisis
+# ============================================================
+
+q12_data = df.copy()
+
+dependent_variables_q12 = ["LS", "WR"]
+explanatory_variables_q12 = ["i", "GDP", "UN", "REER"]
+
+periods_q12 = {
+    "pre_2008": (1970, 2007),
+    "post_2008": (2008, 2019)
+}
+
+q12_rows = []
+
+for dep_var in dependent_variables_q12:
+
+    for period_name, (start_year, end_year) in periods_q12.items():
+
+        sample = q12_data[
+            (q12_data.index.get_level_values("year") >= start_year) &
+            (q12_data.index.get_level_values("year") <= end_year)
+        ].copy()
+
+        y = sample[dep_var]
+        X = sample[explanatory_variables_q12]
+
+        q12_model = PanelOLS(
+            y,
+            X,
+            entity_effects=True,
+            time_effects=True
+        )
+
+        q12_results = q12_model.fit()
+
+        print("\n====================================================")
+        print(f"Q12 TWFE RESULTS: {dep_var}, {period_name}")
+        print("====================================================")
+        print(q12_results.summary)
+
+        with open(TABLES_DIR / f"q12_twfe_{dep_var}_{period_name}.txt", "w") as f:
+            f.write(str(q12_results.summary))
+
+        q12_rows.append({
+            "Dependent variable": dep_var,
+            "Period": period_name,
+            "Start year": start_year,
+            "End year": end_year,
+            "Observations": int(q12_results.nobs),
+            "Coefficient i": q12_results.params.get("i"),
+            "P-value i": q12_results.pvalues.get("i"),
+            "Coefficient GDP": q12_results.params.get("GDP"),
+            "P-value GDP": q12_results.pvalues.get("GDP"),
+            "Coefficient UN": q12_results.params.get("UN"),
+            "P-value UN": q12_results.pvalues.get("UN"),
+            "Coefficient REER": q12_results.params.get("REER"),
+            "P-value REER": q12_results.pvalues.get("REER"),
+            "R-squared": q12_results.rsquared
+        })
+
+q12_summary = pd.DataFrame(q12_rows)
+
+q12_summary.to_excel(
+    TABLES_DIR / "q12_split_sample_twfe_summary.xlsx",
+    index=False
+)
+
+print("Question 12 outputs saved successfully.")
