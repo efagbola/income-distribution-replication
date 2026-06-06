@@ -97,4 +97,31 @@ for dep_var in dependent_variables:
     with open(OUTPUT_DIR / f"q10_twfe_results_{dep_var}.txt", "w") as f:
         f.write(str(twfe_results.summary))
 
+    with open(OUTPUT_DIR / f"q10_twfe_results_{dep_var}.txt", "w") as f:
+        f.write(str(twfe_results.summary))
+
+    # ============================================================
+    # 4. FIRST DIFFERENCES
+    # ============================================================
+
+    fd_df = df[[dep_var] + explanatory_variables].copy()
+
+    fd_df = fd_df.groupby(level=0).diff()
+
+    y_fd = fd_df[dep_var]
+    X_fd = fd_df[explanatory_variables]
+
+    fd_model = PanelOLS(
+        y_fd,
+        X_fd
+    )
+
+    fd_results = fd_model.fit()
+
+    print("\n================ FIRST DIFFERENCES ================\n")
+    print(fd_results.summary)
+
+    with open(OUTPUT_DIR / f"q10_fd_results_{dep_var}.txt", "w") as f:
+        f.write(str(fd_results.summary))
+
 print("\n\nAll estimations completed successfully.")

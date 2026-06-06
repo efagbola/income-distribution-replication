@@ -1,0 +1,29 @@
+                          PanelOLS Estimation Summary                           
+================================================================================
+Dep. Variable:                     LS   R-squared:                        0.0389
+Estimator:                   PanelOLS   R-squared (Between):              0.0889
+No. Observations:                 716   R-squared (Within):               0.0378
+Date:                Sat, Jun 06 2026   R-squared (Overall):              0.0389
+Time:                        20:00:46   Log-likelihood                   -1184.1
+Cov. Estimator:            Unadjusted                                           
+                                        F-statistic:                      7.2109
+Entities:                          15   P-value                           0.0000
+Avg Obs:                       47.733   Distribution:                   F(4,712)
+Min Obs:                       39.000                                           
+Max Obs:                       49.000   F-statistic (robust):             7.2109
+                                        P-value                           0.0000
+Time periods:                      49   Distribution:                   F(4,712)
+Avg Obs:                       14.612                                           
+Min Obs:                       12.000                                           
+Max Obs:                       15.000                                           
+                                                                                
+                             Parameter Estimates                              
+==============================================================================
+            Parameter  Std. Err.     T-stat    P-value    Lower CI    Upper CI
+------------------------------------------------------------------------------
+i              0.0289     0.0275     1.0538     0.2924     -0.0250      0.0829
+GDP        -1.276e-06  4.672e-07    -2.7304     0.0065  -2.193e-06  -3.583e-07
+UN             0.0108     0.0500     0.2165     0.8287     -0.0873      0.1090
+REER           0.0426     0.0096     4.4305     0.0000      0.0237      0.0614
+==============================================================================
+
