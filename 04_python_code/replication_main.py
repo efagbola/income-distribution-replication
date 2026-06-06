@@ -7,27 +7,20 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import gaussian_kde, norm
 
-try:
-    from scipy.stats import gaussian_kde
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-    print("Warning: scipy is not installed, so KDE lines will not be plotted.")
-    print("Install it with: pip install scipy")
+BASE_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = BASE_DIR / "02_original_data"
+CLEAN_DATA_DIR = BASE_DIR / "03_clean_data"
+TABLES_DIR = BASE_DIR / "08_tables"
+FIGURES_DIR = BASE_DIR / "07_figures"
 
-
-BASE_DIR = Path(r"C:\Users\Evelyn1\OneDrive - Quant Decisions S.L\Documents\Perso\Econometrics")
-DATA_DIR = BASE_DIR / "data"
-OUTPUT_DIR = BASE_DIR / "outputs"
-
-TABLES_DIR = OUTPUT_DIR / "tables"
-FIGURES_DIR = OUTPUT_DIR / "figures"
-
+CLEAN_DATA_DIR.mkdir(parents=True, exist_ok=True)
 TABLES_DIR.mkdir(parents=True, exist_ok=True)
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 DATA_FILE = DATA_DIR / "Dataset_MP_Impact_functional_Distribution.xlsx"
+CLEAN_DATA_FILE = CLEAN_DATA_DIR / "Dataset_MP_Impact_functional_Distribution_clean.xlsx"
 
 # Main variables for the partial replication.
 DEPENDENT_VARIABLES = ["WR", "LS"]
@@ -69,10 +62,7 @@ df = df.sort_values(["country", "year"]).reset_index(drop=True)
 countries = sorted(df["country"].dropna().unique())
 years = sorted(df["year"].dropna().unique())
 
-df.to_excel(
-    DATA_DIR / "Dataset_MP_Impact_functional_Distribution_clean.xlsx",
-    index=False
-)
+df.to_excel(CLEAN_DATA_FILE, index=False)
 
 # Keep only variables that exist in the file.
 ALL_VARIABLES = [var for var in ALL_VARIABLES if var in df.columns]
@@ -143,7 +133,7 @@ def plot_hist_kde_normal(values, title, xlabel, save_path):
     plt.figure(figsize=(8, 5))
     plt.hist(values, bins=15, density=True, alpha=0.45, label="Histogram")
 
-    if SCIPY_AVAILABLE and values.nunique() > 1:
+    if values.nunique() > 1:
         kde = gaussian_kde(values)
         plt.plot(x_values, kde(x_values), label="Kernel density estimate")
 
@@ -669,6 +659,3 @@ between_within_correlations.to_excel(
 )
 
 
-print("\nFinished successfully.")
-print("Tables saved in:", TABLES_DIR)
-print("Figures saved in:", FIGURES_DIR)
