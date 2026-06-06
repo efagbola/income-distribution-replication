@@ -659,6 +659,3 @@ between_within_correlations.to_excel(
 )
 
 
-print("\nFinished successfully.")
-print("Tables saved in:", TABLES_DIR)
-print("Figures saved in:", FIGURES_DIR)
