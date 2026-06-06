@@ -368,3 +368,230 @@ for y_var in Y_VARS:
         title=f"Two way fixed effects: {X_VAR} and {y_var}",
         filename=f"q7_twfe_scatter_{X_VAR}_{y_var}.png"
     )
+# Country heterogeneity after two way fixed effects
+# The previous graphs looked at the full transformed sample.
+# Here we check whether the transformed variables behave similarly across countries.
+# This is useful before assuming one common slope for all countries.
+
+def save_country_boxplot(data, variable, filename, ylabel):
+    """
+    Save a country boxplot ordered by within country variance.
+
+    Countries with larger transformed variance appear first.
+    This makes it easier to see whether some countries drive the dispersion.
+    """
+    boxplot_data = data[[ID_COL, variable]].replace([np.inf, -np.inf], np.nan).dropna()
+
+    if boxplot_data.empty:
+        return
+
+    country_variance = (
+        boxplot_data
+        .groupby(ID_COL)[variable]
+        .var()
+        .sort_values(ascending=True)
+    )
+
+    ordered_countries = country_variance.index.tolist()
+
+    values_by_country = [
+        boxplot_data.loc[boxplot_data[ID_COL] == country, variable]
+        for country in ordered_countries
+    ]
+
+    plt.figure(figsize=(11, 6))
+    plt.boxplot(values_by_country, labels=ordered_countries, showfliers=True)
+    plt.xticks(rotation=45, ha="right")
+    plt.axhline(0, linestyle=":")
+    plt.title(f"Two way fixed effects boxplot of {variable} by country")
+    plt.xlabel("Country")
+    plt.ylabel(ylabel)
+    plt.tight_layout()
+    plt.savefig(FIGURES_DIR / filename, dpi=300)
+    plt.close()
+
+
+def country_correlation_table(data, x_col, y_col):
+    """
+    Compute country by country simple correlations and slopes.
+
+    The slope is descriptive only. It comes from a simple bivariate
+    regression inside each country.
+
+    Formula:
+    simple slope = correlation * std(Y) / std(X)
+    """
+    rows = []
+
+    for country, country_data in data.groupby(ID_COL):
+        sample = (
+            country_data[[x_col, y_col]]
+            .replace([np.inf, -np.inf], np.nan)
+            .dropna()
+        )
+
+        n_obs = len(sample)
+
+        if n_obs < 3 or sample[x_col].nunique() <= 1:
+            rows.append({
+                ID_COL: country,
+                "N": n_obs,
+                "correlation": np.nan,
+                f"std_{y_col}": np.nan,
+                f"std_{x_col}": np.nan,
+                "simple_slope": np.nan,
+            })
+            continue
+
+        x = sample[x_col]
+        y = sample[y_col]
+
+        correlation = x.corr(y)
+        std_x = x.std()
+        std_y = y.std()
+
+        if std_x == 0:
+            simple_slope = np.nan
+        else:
+            simple_slope = correlation * std_y / std_x
+
+        rows.append({
+            ID_COL: country,
+            "N": n_obs,
+            "correlation": correlation,
+            f"std_{y_col}": std_y,
+            f"std_{x_col}": std_x,
+            "simple_slope": simple_slope,
+        })
+
+    return (
+        pd.DataFrame(rows)
+        .sort_values("correlation", ascending=False)
+        .reset_index(drop=True)
+    )
+
+# Boxplots by country for the transformed variables used in the TWFE part.
+
+for var in KEY_VARS:
+    save_country_boxplot(
+        twfe_data,
+        variable=f"twfe_{var}",
+        filename=f"q7_twfe_boxplot_by_country_{var}.png",
+        ylabel=f"twfe_{var}"
+    )
+
+
+# Country by country correlations between monetary policy and the two outcomes.
+# These tables show whether the bivariate relationship has the same sign everywhere.
+
+for y_var in Y_VARS:
+    country_corr = country_correlation_table(
+        twfe_data,
+        x_col=f"twfe_{X_VAR}",
+        y_col=f"twfe_{y_var}"
+    )
+
+    country_corr.to_excel(
+        TABLES_DIR / f"q7_twfe_country_correlations_{X_VAR}_{y_var}.xlsx",
+        index=False
+    )
+    # Unbalanced two way fixed effects transformation
+# This keeps the available unbalanced sample instead of dropping Japan.
+# The idea follows the instruction in the template:
+# first compute one way within variables, then remove year effects
+# by subtracting the yearly mean of each within transformed variable.
+
+unbalanced_data = df.dropna(subset=KEY_VARS).copy()
+
+obs_by_country_unbalanced = unbalanced_data.groupby(ID_COL)[TIME_COL].nunique()
+
+countries_to_keep = obs_by_country_unbalanced[
+    obs_by_country_unbalanced > 1
+].index.tolist()
+
+unbalanced_data = unbalanced_data[
+    unbalanced_data[ID_COL].isin(countries_to_keep)
+].copy()
+
+unbalanced_data = (
+    unbalanced_data
+    .sort_values([ID_COL, TIME_COL])
+    .reset_index(drop=True)
+)
+
+removed_countries = sorted(
+    set(df[ID_COL].dropna().unique()) - set(countries_to_keep)
+)
+
+unbalanced_summary = pd.DataFrame({
+    "item": [
+        "Number of countries",
+        "Minimum number of years by country",
+        "Maximum number of years by country",
+        "First year",
+        "Last year",
+        "Number of observations",
+        "Countries removed because of one observation"
+    ],
+    "value": [
+        unbalanced_data[ID_COL].nunique(),
+        obs_by_country_unbalanced.loc[countries_to_keep].min(),
+        obs_by_country_unbalanced.loc[countries_to_keep].max(),
+        unbalanced_data[TIME_COL].min(),
+        unbalanced_data[TIME_COL].max(),
+        len(unbalanced_data),
+        ", ".join(removed_countries) if removed_countries else "None"
+    ]
+})
+
+unbalanced_summary.to_excel(
+    TABLES_DIR / "q7_unbalanced_twfe_sample_summary.xlsx",
+    index=False
+)
+
+
+for var in KEY_VARS:
+    within_col = f"within_unbalanced_{var}"
+    twfe_col = f"twfe_unbalanced_{var}"
+
+    # Step 1: remove country averages.
+    country_mean = unbalanced_data.groupby(ID_COL)[var].transform("mean")
+    unbalanced_data[within_col] = unbalanced_data[var] - country_mean
+
+    # Step 2: remove year effects from the within transformed variable.
+    # This is equivalent to regressing the within variable on year dummies
+    # and collecting the residuals.
+    year_mean = unbalanced_data.groupby(TIME_COL)[within_col].transform("mean")
+    unbalanced_data[twfe_col] = unbalanced_data[within_col] - year_mean
+
+
+unbalanced_twfe_vars = [
+    f"twfe_unbalanced_{var}" for var in KEY_VARS
+]
+
+unbalanced_data[
+    [ID_COL, TIME_COL] + KEY_VARS + unbalanced_twfe_vars
+].to_excel(
+    TABLES_DIR / "q7_unbalanced_twfe_transformed_variables.xlsx",
+    index=False
+)
+
+unbalanced_data[unbalanced_twfe_vars].describe().T.to_excel(
+    TABLES_DIR / "q7_unbalanced_twfe_descriptive_statistics.xlsx"
+)
+
+unbalanced_data[unbalanced_twfe_vars].corr().to_excel(
+    TABLES_DIR / "q7_unbalanced_twfe_correlations.xlsx"
+)
+
+
+# Distribution plots for the unbalanced TWFE transformed variables.
+# These will be used in the next part of the question.
+
+for var in KEY_VARS:
+    save_distribution(
+        unbalanced_data[f"twfe_unbalanced_{var}"],
+        title=f"Unbalanced TWFE distribution of {var}",
+        filename=f"q7_unbalanced_twfe_distribution_{var}.png",
+        xlabel=f"Unbalanced TWFE transformation of {var}"
+    )
