@@ -1,0 +1,34 @@
+                          PanelOLS Estimation Summary                           
+================================================================================
+Dep. Variable:                     LS   R-squared:                        0.3867
+Estimator:                   PanelOLS   R-squared (Between):             -0.0233
+No. Observations:                 731   R-squared (Within):               0.3867
+Date:                Sat, Jun 06 2026   R-squared (Overall):             -0.0208
+Time:                        19:40:00   Log-likelihood                   -1903.5
+Cov. Estimator:            Unadjusted                                           
+                                        F-statistic:                      112.24
+Entities:                          15   P-value                           0.0000
+Avg Obs:                       48.733   Distribution:                   F(4,712)
+Min Obs:                       40.000                                           
+Max Obs:                       50.000   F-statistic (robust):             112.24
+                                        P-value                           0.0000
+Time periods:                      50   Distribution:                   F(4,712)
+Avg Obs:                       14.620                                           
+Min Obs:                       12.000                                           
+Max Obs:                       15.000                                           
+                                                                                
+                             Parameter Estimates                              
+==============================================================================
+            Parameter  Std. Err.     T-stat    P-value    Lower CI    Upper CI
+------------------------------------------------------------------------------
+i              0.4551     0.0281     16.204     0.0000      0.3999      0.5102
+GDP        -3.399e-07  1.048e-07    -3.2438     0.0012  -5.455e-07  -1.342e-07
+UN            -0.3325     0.0419    -7.9318     0.0000     -0.4148     -0.2502
+REER          -0.0038     0.0124    -0.3021     0.7627     -0.0282      0.0207
+==============================================================================
+
+F-test for Poolability: 62.013
+P-value: 0.0000
+Distribution: F(14,712)
+
+Included effects: Entity
