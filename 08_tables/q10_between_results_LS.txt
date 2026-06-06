@@ -1,0 +1,28 @@
+                         BetweenOLS Estimation Summary                          
+================================================================================
+Dep. Variable:                     LS   R-squared:                        0.9947
+Estimator:                 BetweenOLS   R-squared (Between):              0.9947
+No. Observations:                  15   R-squared (Within):              -1.7667
+Date:                Sat, Jun 06 2026   R-squared (Overall):              0.9806
+Time:                        20:07:20   Log-likelihood                   -42.949
+Cov. Estimator:            Unadjusted                                           
+                                        F-statistic:                      518.96
+Entities:                          15   P-value                           0.0000
+Avg Obs:                       48.733   Distribution:                    F(4,11)
+Min Obs:                       40.000                                           
+Max Obs:                       50.000   F-statistic (robust):             518.96
+                                        P-value                           0.0000
+Time periods:                      50   Distribution:                    F(4,11)
+Avg Obs:                       14.620                                           
+Min Obs:                       12.000                                           
+Max Obs:                       15.000                                           
+                                                                                
+                             Parameter Estimates                              
+==============================================================================
+            Parameter  Std. Err.     T-stat    P-value    Lower CI    Upper CI
+------------------------------------------------------------------------------
+i              0.7819     0.8503     0.9195     0.3775     -1.0897      2.6535
+GDP          1.49e-07  4.909e-07     0.3035     0.7672  -9.315e-07   1.229e-06
+UN             1.1458     0.5219     2.1955     0.0505     -0.0028      2.2944
+REER           0.4579     0.0505     9.0610     0.0000      0.3466      0.5691
+==============================================================================

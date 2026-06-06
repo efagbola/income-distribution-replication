@@ -1,0 +1,28 @@
+                         BetweenOLS Estimation Summary                          
+================================================================================
+Dep. Variable:                     WR   R-squared:                        0.9916
+Estimator:                 BetweenOLS   R-squared (Between):              0.9916
+No. Observations:                  15   R-squared (Within):              -2.8107
+Date:                Sat, Jun 06 2026   R-squared (Overall):              0.6333
+Time:                        20:07:20   Log-likelihood                   -43.876
+Cov. Estimator:            Unadjusted                                           
+                                        F-statistic:                      325.65
+Entities:                          15   P-value                           0.0000
+Avg Obs:                       48.733   Distribution:                    F(4,11)
+Min Obs:                       40.000                                           
+Max Obs:                       50.000   F-statistic (robust):             325.65
+                                        P-value                           0.0000
+Time periods:                      50   Distribution:                    F(4,11)
+Avg Obs:                       14.620                                           
+Min Obs:                       12.000                                           
+Max Obs:                       15.000                                           
+                                                                                
+                             Parameter Estimates                              
+==============================================================================
+            Parameter  Std. Err.     T-stat    P-value    Lower CI    Upper CI
+------------------------------------------------------------------------------
+i              5.4739     0.9045     6.0520     0.0001      3.4832      7.4647
+GDP         4.515e-07  5.222e-07     0.8647     0.4057  -6.978e-07   1.601e-06
+UN             0.2993     0.5551     0.5392     0.6005     -0.9225      1.5211
+REER           0.1219     0.0537     2.2680     0.0445      0.0036      0.2402
+==============================================================================

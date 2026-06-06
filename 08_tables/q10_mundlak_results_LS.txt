@@ -1,0 +1,32 @@
+                        RandomEffects Estimation Summary                        
+================================================================================
+Dep. Variable:                     LS   R-squared:                        0.7739
+Estimator:              RandomEffects   R-squared (Between):              0.9943
+No. Observations:                 731   R-squared (Within):               0.3867
+Date:                Sat, Jun 06 2026   R-squared (Overall):              0.9912
+Time:                        20:07:20   Log-likelihood                   -1909.4
+Cov. Estimator:            Unadjusted                                           
+                                        F-statistic:                      309.27
+Entities:                          15   P-value                           0.0000
+Avg Obs:                       48.733   Distribution:                   F(8,723)
+Min Obs:                       40.000                                           
+Max Obs:                       50.000   F-statistic (robust):             309.27
+                                        P-value                           0.0000
+Time periods:                      50   Distribution:                   F(8,723)
+Avg Obs:                       14.620                                           
+Min Obs:                       12.000                                           
+Max Obs:                       15.000                                           
+                                                                                
+                             Parameter Estimates                              
+==============================================================================
+            Parameter  Std. Err.     T-stat    P-value    Lower CI    Upper CI
+------------------------------------------------------------------------------
+i              0.4551     0.0281     16.197     0.0000      0.3999      0.5102
+GDP        -3.393e-07  1.048e-07    -3.2372     0.0013  -5.451e-07  -1.335e-07
+UN            -0.3324     0.0419    -7.9256     0.0000     -0.4147     -0.2501
+REER          -0.0036     0.0125    -0.2869     0.7743     -0.0280      0.0209
+i_mean         0.1317     0.9960     0.1322     0.8948     -1.8238      2.0872
+GDP_mean    4.763e-07  5.107e-07     0.9326     0.3513  -5.263e-07   1.479e-06
+UN_mean        1.4042     0.5252     2.6737     0.0077      0.3731      2.4353
+REER_mean      0.4824     0.0604     7.9912     0.0000      0.3639      0.6009
+==============================================================================
