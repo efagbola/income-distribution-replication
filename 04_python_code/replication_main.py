@@ -1118,3 +1118,454 @@ for var in KEY_VARS_Q7:
     )
 
 print("Question 7 outputs saved successfully.")
+
+# ============================================
+# 8. COMPARISON OF TRANSFORMED VARIABLES
+# ============================================
+
+Q8_VARS = ["WR", "LS", "i"]
+Y_VARS = ["WR", "LS"]
+X_VAR = "i"
+
+# ------------------------------------------------------------
+# Q8.1 Build comparison datasets
+# ------------------------------------------------------------
+
+# Between: one observation per country
+q8_between = between_country[["country"] + [f"{v}_between" for v in Q8_VARS]].copy()
+
+# One-way within: country-year observations
+q8_within = between_within_data[
+    ["country", "year"] + [f"{v}_within" for v in Q8_VARS]
+].copy()
+
+# First differences: country-year observations
+q8_fd = q7_data[
+    ["country", "year"] + [f"d_{v}" for v in Q8_VARS]
+].copy()
+
+# Balanced TWFE: country-year observations
+q8_twfe = twfe_data[
+    ["country", "year"] + [f"twfe_{v}" for v in Q8_VARS]
+].copy()
+
+
+# ------------------------------------------------------------
+# Q8.2 Summary statistics
+# ------------------------------------------------------------
+
+q8_summary_rows = []
+
+for var in Q8_VARS:
+    transformations = {
+        "Between": q8_between[f"{var}_between"],
+        "One-way within": q8_within[f"{var}_within"],
+        "First differences": q8_fd[f"d_{var}"],
+        "Two-way fixed effects": q8_twfe[f"twfe_{var}"],
+    }
+
+    for trans_name, series in transformations.items():
+        values = series.replace([np.inf, -np.inf], np.nan).dropna()
+        std = values.std(ddof=1)
+
+        q8_summary_rows.append({
+            "Variable": var,
+            "Transformation": trans_name,
+            "N": len(values),
+            "Mean": values.mean(),
+            "Median": values.median(),
+            "Standard deviation": std,
+            "Standard error": std / np.sqrt(len(values)) if len(values) > 0 else np.nan,
+            "Q1": values.quantile(0.25),
+            "Q3": values.quantile(0.75),
+            "Standardized min": (values.min() - values.mean()) / std if std != 0 else np.nan,
+            "Standardized max": (values.max() - values.mean()) / std if std != 0 else np.nan,
+        })
+
+q8_summary = pd.DataFrame(q8_summary_rows)
+q8_summary.to_excel(TABLES_DIR / "q8_transformation_summary_statistics.xlsx", index=False)
+
+
+# ------------------------------------------------------------
+# Q8.3 Boxplots: Between overall, other transformations by country
+# ------------------------------------------------------------
+
+def save_q8_single_boxplot(series, title, ylabel, filename):
+    values = pd.Series(series).replace([np.inf, -np.inf], np.nan).dropna()
+
+    if len(values) < 3:
+        print(f"Not enough data for graph: {title}")
+        return
+
+    plt.figure(figsize=(6, 5))
+    plt.boxplot(values, showfliers=True)
+    plt.axhline(0, linestyle=":")
+    plt.title(title)
+    plt.ylabel(ylabel)
+    plt.xticks([1], ["All countries"])
+    plt.tight_layout()
+    plt.savefig(FIGURES_DIR / filename, dpi=300)
+    plt.close()
+
+
+def save_q8_boxplot_by_country(data, value_col, title, filename):
+    plot_data = data[["country", value_col]].replace([np.inf, -np.inf], np.nan).dropna()
+
+    if plot_data.empty:
+        return
+
+    country_variance = (
+        plot_data.groupby("country")[value_col]
+        .var()
+        .sort_values(ascending=True)
+    )
+
+    ordered_countries = country_variance.index.tolist()
+
+    values_by_country = [
+        plot_data.loc[plot_data["country"] == country, value_col]
+        for country in ordered_countries
+    ]
+
+    plt.figure(figsize=(11, 6))
+    plt.boxplot(values_by_country, labels=ordered_countries, showfliers=True)
+    plt.xticks(rotation=45, ha="right")
+    plt.axhline(0, linestyle=":")
+    plt.title(title)
+    plt.xlabel("Country")
+    plt.ylabel(value_col)
+    plt.tight_layout()
+    plt.savefig(FIGURES_DIR / filename, dpi=300)
+    plt.close()
+
+
+for var in Q8_VARS:
+    # Between distribution: one country average per country, so one overall boxplot
+    save_q8_single_boxplot(
+        q8_between[f"{var}_between"],
+        title=f"Q8 Between distribution across countries: {var}",
+        ylabel=f"{var}_between",
+        filename=f"q8_boxplot_between_all_countries_{var}.png"
+    )
+
+    # Within, FD and TWFE distributions by country
+    save_q8_boxplot_by_country(
+        q8_within,
+        value_col=f"{var}_within",
+        title=f"Q8 One-way within distribution by country: {var}",
+        filename=f"q8_boxplot_within_by_country_{var}.png"
+    )
+
+    save_q8_boxplot_by_country(
+        q8_fd,
+        value_col=f"d_{var}",
+        title=f"Q8 First differences distribution by country: {var}",
+        filename=f"q8_boxplot_fd_by_country_{var}.png"
+    )
+
+    save_q8_boxplot_by_country(
+        q8_twfe,
+        value_col=f"twfe_{var}",
+        title=f"Q8 Two-way fixed effects distribution by country: {var}",
+        filename=f"q8_boxplot_twfe_by_country_{var}.png"
+    )
+
+
+# ------------------------------------------------------------
+# Q8.4 Correlation matrices with trend and lags
+# ------------------------------------------------------------
+
+Q8_CORR_VARS = [v for v in ALL_VARIABLES if v in df.columns and v != "PCOM"]
+
+q8_corr_base = df[["country", "year"] + Q8_CORR_VARS].copy()
+q8_corr_base["trend"] = q8_corr_base.groupby("country").cumcount() + 1
+
+for var in Q8_CORR_VARS:
+    q8_corr_base[f"{var}_lag1"] = q8_corr_base.groupby("country")[var].shift(1)
+
+# Between matrix: country averages + trend average + variable lags
+between_corr_data = (
+    q8_corr_base
+    .groupby("country")
+    .mean(numeric_only=True)
+    .reset_index()
+)
+
+between_corr_cols = (
+    Q8_CORR_VARS
+    + ["trend"]
+    + [f"{v}_lag1" for v in Q8_CORR_VARS]
+)
+
+q8_between_full_corr = between_corr_data[between_corr_cols].corr()
+q8_between_full_corr.to_excel(TABLES_DIR / "q8_between_full_correlation_matrix_with_trend_lags.xlsx")
+
+
+# One-way within matrix: remove country means
+within_corr_data = q8_corr_base[["country", "year"] + between_corr_cols].copy()
+
+for col in between_corr_cols:
+    within_corr_data[f"{col}_within"] = (
+        within_corr_data[col] - within_corr_data.groupby("country")[col].transform("mean")
+    )
+
+within_corr_cols = [f"{col}_within" for col in between_corr_cols]
+q8_within_full_corr = within_corr_data[within_corr_cols].corr()
+q8_within_full_corr.to_excel(TABLES_DIR / "q8_within_full_correlation_matrix_with_trend_lags.xlsx")
+
+
+# FD matrix: include FD variables and lags of FD variables
+fd_corr_data = q7_data[["country", "year"]].copy()
+
+for var in Q8_CORR_VARS:
+    if f"d_{var}" in q7_data.columns:
+        fd_corr_data[f"d_{var}"] = q7_data[f"d_{var}"]
+    else:
+        fd_corr_data[f"d_{var}"] = q7_data.groupby("country")[var].diff()
+
+    fd_corr_data[f"d_{var}_lag1"] = fd_corr_data.groupby("country")[f"d_{var}"].shift(1)
+
+fd_corr_cols = [f"d_{v}" for v in Q8_CORR_VARS] + [f"d_{v}_lag1" for v in Q8_CORR_VARS]
+q8_fd_full_corr = fd_corr_data[fd_corr_cols].corr()
+q8_fd_full_corr.to_excel(TABLES_DIR / "q8_fd_full_correlation_matrix_with_lags.xlsx")
+
+
+# TWFE matrix: balanced TWFE for available variables
+twfe_corr_data = twfe_data[["country", "year"]].copy()
+
+for var in Q8_CORR_VARS:
+    if f"twfe_{var}" in twfe_data.columns:
+        twfe_corr_data[f"twfe_{var}"] = twfe_data[f"twfe_{var}"]
+    elif var in twfe_data.columns:
+        twfe_corr_data[f"twfe_{var}"] = twfe_transform(twfe_data, var)
+
+twfe_corr_cols = [col for col in twfe_corr_data.columns if col.startswith("twfe_")]
+q8_twfe_full_corr = twfe_corr_data[twfe_corr_cols].corr()
+q8_twfe_full_corr.to_excel(TABLES_DIR / "q8_twfe_full_correlation_matrix.xlsx")
+
+
+# Smaller matrices for the report: only WR, LS and i
+q8_between_corr = q8_between[[f"{v}_between" for v in Q8_VARS]].corr()
+q8_between_corr.to_excel(TABLES_DIR / "q8_between_correlation_matrix.xlsx")
+
+q8_within_corr = q8_within[[f"{v}_within" for v in Q8_VARS]].corr()
+q8_within_corr.to_excel(TABLES_DIR / "q8_within_correlation_matrix.xlsx")
+
+q8_fd_corr = q8_fd[[f"d_{v}" for v in Q8_VARS]].corr()
+q8_fd_corr.to_excel(TABLES_DIR / "q8_fd_correlation_matrix.xlsx")
+
+q8_twfe_corr = q8_twfe[[f"twfe_{v}" for v in Q8_VARS]].corr()
+q8_twfe_corr.to_excel(TABLES_DIR / "q8_twfe_correlation_matrix.xlsx")
+
+
+# ------------------------------------------------------------
+# Q8.5 Autocorrelation, trend correlation, and first 30 FD check
+# ------------------------------------------------------------
+
+auto_trend_rows = []
+
+for var in Q8_CORR_VARS:
+    temp_auto = q8_corr_base[[var, f"{var}_lag1"]].dropna()
+    temp_trend = q8_corr_base[[var, "trend"]].dropna()
+
+    auto_trend_rows.append({
+        "Variable": var,
+        "Autocorrelation with lag 1": temp_auto[var].corr(temp_auto[f"{var}_lag1"]),
+        "N autocorrelation": len(temp_auto),
+        "Trend correlation": temp_trend[var].corr(temp_trend["trend"]),
+        "N trend correlation": len(temp_trend),
+    })
+
+q8_auto_trend = pd.DataFrame(auto_trend_rows)
+q8_auto_trend.to_excel(TABLES_DIR / "q8_autocorrelation_and_trend_correlation.xlsx", index=False)
+
+
+# First 30 observations with FD and lag of FD
+q8_fd_lag_check = fd_corr_data[["country", "year", "d_WR", "d_LS", "d_i", "d_WR_lag1", "d_LS_lag1", "d_i_lag1"]].copy()
+
+q8_fd_lag_check.head(30).to_excel(
+    TABLES_DIR / "q8_first_30_fd_and_lag_check.xlsx",
+    index=False
+)
+# ------------------------------------------------------------
+# Q8.6 Bivariate graphs: linear, quadratic and LOWESS fit
+# ------------------------------------------------------------
+
+try:
+    from statsmodels.nonparametric.smoothers_lowess import lowess
+    HAS_LOWESS = True
+except ImportError:
+    HAS_LOWESS = False
+
+
+def save_q8_bivariate_fit(data, x_col, y_col, title, filename):
+    plot_data = data[[x_col, y_col]].replace([np.inf, -np.inf], np.nan).dropna()
+
+    if len(plot_data) < 5 or plot_data[x_col].nunique() <= 2:
+        print(f"Not enough data for graph: {title}")
+        return
+
+    x = plot_data[x_col]
+    y = plot_data[y_col]
+    corr = x.corr(y)
+
+    x_grid = np.linspace(x.min(), x.max(), 200)
+
+    plt.figure(figsize=(8, 5))
+    plt.scatter(x, y, alpha=0.55, label="Observations")
+
+    # Linear fit
+    linear_coef = np.polyfit(x, y, 1)
+    plt.plot(x_grid, np.polyval(linear_coef, x_grid), label="Linear fit")
+
+    # Quadratic fit
+    if x.nunique() > 2:
+        quadratic_coef = np.polyfit(x, y, 2)
+        plt.plot(x_grid, np.polyval(quadratic_coef, x_grid), label="Quadratic fit")
+
+    # LOWESS fit
+    if HAS_LOWESS:
+        lowess_result = lowess(y, x, frac=0.3, return_sorted=True)
+        plt.plot(lowess_result[:, 0], lowess_result[:, 1], label="LOWESS fit")
+
+    plt.title(f"{title}\nCorrelation = {corr:.3f}")
+    plt.xlabel(x_col)
+    plt.ylabel(y_col)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(FIGURES_DIR / filename, dpi=300)
+    plt.close()
+
+
+for y_var in Y_VARS:
+    save_q8_bivariate_fit(
+        q8_between,
+        x_col=f"{X_VAR}_between",
+        y_col=f"{y_var}_between",
+        title=f"Q8 Between: {X_VAR} and {y_var}",
+        filename=f"q8_bivariate_between_{X_VAR}_{y_var}.png"
+    )
+
+    save_q8_bivariate_fit(
+        q8_within,
+        x_col=f"{X_VAR}_within",
+        y_col=f"{y_var}_within",
+        title=f"Q8 One-way within: {X_VAR} and {y_var}",
+        filename=f"q8_bivariate_within_{X_VAR}_{y_var}.png"
+    )
+
+    save_q8_bivariate_fit(
+        q8_fd,
+        x_col=f"d_{X_VAR}",
+        y_col=f"d_{y_var}",
+        title=f"Q8 First differences: d_{X_VAR} and d_{y_var}",
+        filename=f"q8_bivariate_fd_{X_VAR}_{y_var}.png"
+    )
+
+    save_q8_bivariate_fit(
+        q8_twfe,
+        x_col=f"twfe_{X_VAR}",
+        y_col=f"twfe_{y_var}",
+        title=f"Q8 TWFE: {X_VAR} and {y_var}",
+        filename=f"q8_bivariate_twfe_{X_VAR}_{y_var}.png"
+    )
+
+
+# ============================================================
+# 9. COUNTRY HETEROGENEITY
+# ============================================================
+
+def classify_correlation(corr):
+    if pd.isna(corr):
+        return "Missing"
+    elif corr > 0.08:
+        return "Positive"
+    elif corr < -0.08:
+        return "Negative"
+    else:
+        return "Weak"
+
+
+q9_rows = []
+
+for y_var in Y_VARS:
+
+    # First-difference heterogeneity
+    for country, country_data in q7_data.groupby("country"):
+        sample = country_data[[f"d_{y_var}", "d_i"]].replace([np.inf, -np.inf], np.nan).dropna()
+
+        if len(sample) >= 3 and sample["d_i"].std(ddof=1) != 0:
+            corr = sample[f"d_{y_var}"].corr(sample["d_i"])
+            std_y = sample[f"d_{y_var}"].std(ddof=1)
+            std_x = sample["d_i"].std(ddof=1)
+            ratio = std_y / std_x if std_x != 0 else np.nan
+            beta = corr * ratio if std_x != 0 else np.nan
+        else:
+            corr, std_y, std_x, ratio, beta = np.nan, np.nan, np.nan, np.nan, np.nan
+
+        q9_rows.append({
+            "Dependent variable": y_var,
+            "Transformation": "First differences",
+            "Individual name (i)": country,
+            "T(i)": len(sample),
+            "r(Y,X)": corr,
+            "sigma(Y)": std_y,
+            "sigma(X)": std_x,
+            "sigma(Y)/sigma(X)": ratio,
+            "beta = r * sigma(Y)/sigma(X)": beta,
+            "Group": classify_correlation(corr),
+        })
+
+    # TWFE heterogeneity
+    for country, country_data in twfe_data.groupby("country"):
+        sample = country_data[[f"twfe_{y_var}", "twfe_i"]].replace([np.inf, -np.inf], np.nan).dropna()
+
+        if len(sample) >= 3 and sample["twfe_i"].std(ddof=1) != 0:
+            corr = sample[f"twfe_{y_var}"].corr(sample["twfe_i"])
+            std_y = sample[f"twfe_{y_var}"].std(ddof=1)
+            std_x = sample["twfe_i"].std(ddof=1)
+            ratio = std_y / std_x if std_x != 0 else np.nan
+            beta = corr * ratio if std_x != 0 else np.nan
+        else:
+            corr, std_y, std_x, ratio, beta = np.nan, np.nan, np.nan, np.nan, np.nan
+
+        q9_rows.append({
+            "Dependent variable": y_var,
+            "Transformation": "Two-way fixed effects",
+            "Individual name (i)": country,
+            "T(i)": len(sample),
+            "r(Y,X)": corr,
+            "sigma(Y)": std_y,
+            "sigma(X)": std_x,
+            "sigma(Y)/sigma(X)": ratio,
+            "beta = r * sigma(Y)/sigma(X)": beta,
+            "Group": classify_correlation(corr),
+        })
+
+
+q9_country_heterogeneity = pd.DataFrame(q9_rows)
+
+q9_country_heterogeneity = q9_country_heterogeneity.sort_values(
+    ["Dependent variable", "Transformation", "r(Y,X)"],
+    ascending=[True, True, False]
+)
+
+q9_country_heterogeneity.to_excel(
+    TABLES_DIR / "q9_country_heterogeneity_fd_twfe.xlsx",
+    index=False
+)
+
+q9_group_diagnosis = (
+    q9_country_heterogeneity
+    .groupby(["Dependent variable", "Transformation", "Group"])
+    .size()
+    .reset_index(name="Number of countries")
+)
+
+q9_group_diagnosis.to_excel(
+    TABLES_DIR / "q9_group_diagnosis_summary.xlsx",
+    index=False
+)
+
+print("Question 8 and 9 outputs saved successfully.")
