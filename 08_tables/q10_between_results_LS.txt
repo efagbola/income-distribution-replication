@@ -4,7 +4,7 @@ Dep. Variable:                     LS   R-squared:                        0.9947
 Estimator:                 BetweenOLS   R-squared (Between):              0.9947
 No. Observations:                  15   R-squared (Within):              -1.7667
 Date:                Sat, Jun 06 2026   R-squared (Overall):              0.9806
-Time:                        20:00:46   Log-likelihood                   -42.949
+Time:                        20:07:20   Log-likelihood                   -42.949
 Cov. Estimator:            Unadjusted                                           
                                         F-statistic:                      518.96
 Entities:                          15   P-value                           0.0000

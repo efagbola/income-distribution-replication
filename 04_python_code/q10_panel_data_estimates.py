@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-from linearmodels.panel import PanelOLS, BetweenOLS
+from linearmodels.panel import PanelOLS, BetweenOLS, RandomEffects
 
 # ============================================================
 # Paths
@@ -61,7 +61,7 @@ for dep_var in dependent_variables:
         f.write(str(between_results.summary))
 
     # ============================================================
-    # 2. FIXED EFFECTS (WITHIN)
+    # 2. FIXED EFFECTS / WITHIN ESTIMATOR
     # ============================================================
 
     fe_model = PanelOLS(
@@ -97,15 +97,11 @@ for dep_var in dependent_variables:
     with open(OUTPUT_DIR / f"q10_twfe_results_{dep_var}.txt", "w") as f:
         f.write(str(twfe_results.summary))
 
-    with open(OUTPUT_DIR / f"q10_twfe_results_{dep_var}.txt", "w") as f:
-        f.write(str(twfe_results.summary))
-
     # ============================================================
     # 4. FIRST DIFFERENCES
     # ============================================================
 
     fd_df = df[[dep_var] + explanatory_variables].copy()
-
     fd_df = fd_df.groupby(level=0).diff()
 
     y_fd = fd_df[dep_var]
@@ -123,5 +119,37 @@ for dep_var in dependent_variables:
 
     with open(OUTPUT_DIR / f"q10_fd_results_{dep_var}.txt", "w") as f:
         f.write(str(fd_results.summary))
+
+    # ============================================================
+    # 5. MUNDLAK / CORRELATED RANDOM EFFECTS
+    # ============================================================
+
+    mundlak_df = df[[dep_var] + explanatory_variables].copy()
+
+    for var in explanatory_variables:
+        mundlak_df[f"{var}_mean"] = (
+            mundlak_df.groupby(level=0)[var]
+            .transform("mean")
+        )
+
+    y_mundlak = mundlak_df[dep_var]
+
+    X_mundlak = mundlak_df[
+        explanatory_variables
+        + [f"{var}_mean" for var in explanatory_variables]
+    ]
+
+    mundlak_model = RandomEffects(
+        y_mundlak,
+        X_mundlak
+    )
+
+    mundlak_results = mundlak_model.fit()
+
+    print("\n================ MUNDLAK RANDOM EFFECTS ================\n")
+    print(mundlak_results.summary)
+
+    with open(OUTPUT_DIR / f"q10_mundlak_results_{dep_var}.txt", "w") as f:
+        f.write(str(mundlak_results.summary))
 
 print("\n\nAll estimations completed successfully.")

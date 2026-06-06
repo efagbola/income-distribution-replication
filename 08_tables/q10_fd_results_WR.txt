@@ -4,7 +4,7 @@ Dep. Variable:                     WR   R-squared:                        0.0360
 Estimator:                   PanelOLS   R-squared (Between):              0.0462
 No. Observations:                 716   R-squared (Within):               0.0344
 Date:                Sat, Jun 06 2026   R-squared (Overall):              0.0360
-Time:                        20:00:46   Log-likelihood                   -1750.4
+Time:                        20:07:20   Log-likelihood                   -1750.4
 Cov. Estimator:            Unadjusted                                           
                                         F-statistic:                      6.6464
 Entities:                          15   P-value                           0.0000
