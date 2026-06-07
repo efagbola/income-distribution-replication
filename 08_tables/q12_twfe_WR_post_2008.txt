@@ -3,15 +3,15 @@
 Dep. Variable:                     WR   R-squared:                        0.0220
 Estimator:                   PanelOLS   R-squared (Between):             -0.0149
 No. Observations:                 180   R-squared (Within):               0.2992
-Date:                Sat, Jun 06 2026   R-squared (Overall):             -0.0143
-Time:                        21:11:18   Log-likelihood                   -303.40
-Cov. Estimator:            Unadjusted                                           
+Date:                Sun, Jun 07 2026   R-squared (Overall):             -0.0143
+Time:                        15:31:36   Log-likelihood                   -303.40
+Cov. Estimator:             Clustered                                           
                                         F-statistic:                      0.8424
 Entities:                          15   P-value                           0.5004
 Avg Obs:                       12.000   Distribution:                   F(4,150)
 Min Obs:                       12.000                                           
-Max Obs:                       12.000   F-statistic (robust):             0.8424
-                                        P-value                           0.5004
+Max Obs:                       12.000   F-statistic (robust):             0.5792
+                                        P-value                           0.6782
 Time periods:                      12   Distribution:                   F(4,150)
 Avg Obs:                       15.000                                           
 Min Obs:                       15.000                                           
@@ -21,10 +21,10 @@ Max Obs:                       15.000
 ==============================================================================
             Parameter  Std. Err.     T-stat    P-value    Lower CI    Upper CI
 ------------------------------------------------------------------------------
-i             -0.4254     0.2563    -1.6600     0.0990     -0.9318      0.0810
-GDP         5.493e-07  4.792e-07     1.1462     0.2535  -3.976e-07   1.496e-06
-UN            -0.0579     0.0791    -0.7321     0.4653     -0.2143      0.0984
-REER          -0.0108     0.0217    -0.4988     0.6186     -0.0537      0.0320
+i             -0.4254     0.3244    -1.3113     0.1918     -1.0665      0.2156
+GDP         5.493e-07  6.316e-07     0.8697     0.3859  -6.987e-07   1.797e-06
+UN            -0.0579     0.1014    -0.5717     0.5684     -0.2582      0.1423
+REER          -0.0108     0.0188    -0.5749     0.5662     -0.0480      0.0264
 ==============================================================================
 
 F-test for Poolability: 188.53
